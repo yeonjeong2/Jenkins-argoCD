@@ -12,8 +12,7 @@ pipeline {
       }
       steps {
         script {
-          def commitHash = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-          env.IMAGE_TAG = commitHash
+          env.IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
         }
 
         sh '''
