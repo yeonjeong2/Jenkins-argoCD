@@ -2,21 +2,23 @@ pipeline {
   agent any
 
   environment {
-    IMAGE_TAG = ''
+    IMAGE_TAG = ''  // 전역 선언
   }
 
   stages {
     stage('Build & Push Docker Image') {
       environment {
-        DOCKER_CREDS = credentials('dockerhub') // ⬅️ 자격증명 한 번만 호출
+        DOCKER_CREDS = credentials('dockerhub')  // Username + Token
       }
       steps {
         script {
+          // 커밋 해시를 태그로 사용
           env.IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
         }
 
         sh '''
         echo "✅ Docker Build 시작"
+        echo "🎯 태그: $IMAGE_TAG"
         docker build -t duswjd/nginx:$IMAGE_TAG .
         echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin
         docker push duswjd/nginx:$IMAGE_TAG
@@ -26,7 +28,7 @@ pipeline {
 
     stage('Update GitOps Repo') {
       environment {
-        GIT_CREDS = credentials('git-creds')
+        GIT_CREDS = credentials('git-creds')  // Username + Token
       }
       steps {
         sh '''
