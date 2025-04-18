@@ -2,33 +2,33 @@ pipeline {
   agent any
 
   environment {
-    IMAGE_TAG = ''  // 전역 선언
+    COMMIT_HASH = ''
   }
 
   stages {
     stage('Build & Push Docker Image') {
       environment {
-        DOCKER_CREDS = credentials('dockerhub')  // Username + Token
+        DOCKER_CREDS = credentials('dockerhub')
       }
       steps {
         script {
-          // 커밋 해시를 태그로 사용
-          env.IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+          // 커밋 해시를 변수에 저장
+          env.COMMIT_HASH = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
         }
 
         sh '''
         echo "✅ Docker Build 시작"
-        echo "🎯 태그: $IMAGE_TAG"
-        docker build -t duswjd/nginx:$IMAGE_TAG .
+        echo "🎯 태그: $COMMIT_HASH"
+        docker build -t duswjd/nginx:$COMMIT_HASH .
         echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin
-        docker push duswjd/nginx:$IMAGE_TAG
+        docker push duswjd/nginx:$COMMIT_HASH
         '''
       }
     }
 
     stage('Update GitOps Repo') {
       environment {
-        GIT_CREDS = credentials('git-creds')  // Username + Token
+        GIT_CREDS = credentials('git-creds')
       }
       steps {
         sh '''
@@ -38,12 +38,12 @@ pipeline {
 
         echo "✅ 이미지 태그 수정"
         cd gitops-tmp/my-nginx-app
-        sed -i "s|duswjd/nginx:.*|duswjd/nginx:$IMAGE_TAG|" deployment.yaml
+        sed -i "s|duswjd/nginx:.*|duswjd/nginx:$COMMIT_HASH|" deployment.yaml
 
         echo "✅ Git Commit & Push"
         git config user.email "jenkins@ci.com"
         git config user.name "jenkins-ci"
-        git commit -am "♻️ 이미지 태그 업데이트: $IMAGE_TAG"
+        git commit -am "♻️ 이미지 태그 업데이트: $COMMIT_HASH"
         git push origin main
         '''
       }
