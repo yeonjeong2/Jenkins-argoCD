@@ -28,7 +28,7 @@ pipeline {
         git clone https://$GITOPS_CREDS_USR:$GITOPS_CREDS_PSW@github.com/yeonjeong2/gitops.git gitops-tmp
 
         echo "✅ 이미지 태그 수정"
-        cd gitops-tmp/my-nginx-app
+        cd gitops-tmp/my-nginx
         sed -i "s|duswjd/nginx:.*|duswjd/nginx:$IMAGE_TAG|" deployment.yaml
 
         echo "✅ Git 커밋 및 푸시"
