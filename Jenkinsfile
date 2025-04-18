@@ -4,8 +4,8 @@ pipeline {
   environment {
     DOCKER_USERNAME = credentials('dockerhub')
     DOCKER_PASSWORD = credentials('dockerhub')
-    GITOPS_USERNAME = credentials('gitops-creds')
-    GITOPS_PASSWORD = credentials('gitops-creds')
+    GITOPS_USERNAME = credentials('git-creds')
+    GITOPS_PASSWORD = credentials('git-creds')
   }
 
   stages {
