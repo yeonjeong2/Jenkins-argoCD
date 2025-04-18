@@ -2,14 +2,14 @@ pipeline {
   agent any
 
   environment {
-    DOCKER_USERNAME = credentials('dockerhub')
-    DOCKER_PASSWORD = credentials('dockerhub')
-    GITOPS_USERNAME = credentials('git-creds')
-    GITOPS_PASSWORD = credentials('git-creds')
+    IMAGE_TAG = ''
   }
 
   stages {
     stage('Build & Push Docker Image') {
+      environment {
+        DOCKER_CREDS = credentials('dockerhub') // ⬅️ 자격증명 한 번만 호출
+      }
       steps {
         script {
           def commitHash = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
@@ -19,18 +19,21 @@ pipeline {
         sh '''
         echo "✅ Docker Build 시작"
         docker build -t duswjd/nginx:$IMAGE_TAG .
-        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+        echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin
         docker push duswjd/nginx:$IMAGE_TAG
         '''
       }
     }
 
     stage('Update GitOps Repo') {
+      environment {
+        GIT_CREDS = credentials('git-creds')
+      }
       steps {
         sh '''
         echo "✅ GitOps 배포 레포 클론"
         rm -rf gitops-tmp
-        git clone https://$GITOPS_USERNAME:$GITOPS_PASSWORD@github.com/yeonjeong2/gitops-deploy.git gitops-tmp
+        git clone https://$GIT_CREDS_USR:$GIT_CREDS_PSW@github.com/yeonjeong2/gitops-deploy.git gitops-tmp
 
         echo "✅ 이미지 태그 수정"
         cd gitops-tmp/my-nginx-app
